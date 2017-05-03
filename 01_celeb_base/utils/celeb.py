@@ -65,6 +65,11 @@ def get_images(df, entity, path):
     Xs = np.array(this_entity)
     Ys = [entity] * len(images_list)
 
-    montage(Xs, saveto='./'+entity+'.png')
+    montage_dir = "montage"
+    selected_montage = "{}/{}.png".format(montage_dir, entity)
+    if not os.path.exists(montage_dir):
+        os.makedirs(montage_dir)
+    #montage(Xs, saveto='./'+entity+'.png')
+    montage(Xs, saveto=selected_montage)
 
     return Xs, Ys
