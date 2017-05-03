@@ -70,6 +70,7 @@ class Dataset(object):
         self.n_labels = 0
         self.split = split
         self.rnd_seed = rnd_seed
+        self.rand_idxs = []
 
         # Now mix all the labels that are currently stored as blocks
         self.all_inputs = Xs
@@ -78,6 +79,7 @@ class Dataset(object):
         if rnd_seed:
             np.random.seed(rnd_seed)
         rand_idxs = np.random.permutation(idxs)
+        self.rand_idxs = rand_idxs
         self.all_inputs = self.all_inputs[rand_idxs, ...]
         if ys is not None:
             self.all_labels = ys if not one_hot else dense_to_one_hot(ys)

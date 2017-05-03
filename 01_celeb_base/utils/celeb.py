@@ -7,7 +7,6 @@ from scipy.misc import imread
 from skimage.transform import resize
 from utils.imgs import *
 
-#def get_dataframe(path, num_entities=4, num_samples=25):
 def get_dataframe(path, num_entities=4, num_samples=25, rnd_seed=0):
 
     #Search for directories that start with 'm.'
@@ -25,7 +24,8 @@ def get_dataframe(path, num_entities=4, num_samples=25, rnd_seed=0):
         samples = os.listdir(path + name)
 
         assert(num_samples <= len(samples))
-
+        if rnd_seed:
+            np.random.seed(rnd_seed)
         images = np.random.choice(samples, num_samples, replace=False)
 
         samples_list = [name]*len(images)
@@ -41,7 +41,7 @@ def get_all_images(df, path):
     all_images = []
     all_labels = []
 
-    for entity in list(set(df.entities)):
+    for entity in list(sorted(set(df.entities))):
 
         Xs, Ys = get_images(df, entity, path)
 
