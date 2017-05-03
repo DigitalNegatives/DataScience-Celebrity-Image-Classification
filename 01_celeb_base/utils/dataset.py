@@ -47,7 +47,7 @@ class Dataset(object):
         Indexes of the valid split.
     """
 
-    def __init__(self, Xs, ys=None, split=[1.0, 0.0, 0.0], one_hot=False):
+    def __init__(self, Xs, ys=None, split=[1.0, 0.0, 0.0], one_hot=False, rnd_seed=0):
         """Initialize a Dataset object.
         Parameters
         ----------
@@ -69,11 +69,14 @@ class Dataset(object):
         self.test_idxs = []
         self.n_labels = 0
         self.split = split
+        self.rnd_seed = rnd_seed
 
         # Now mix all the labels that are currently stored as blocks
         self.all_inputs = Xs
         n_idxs = len(self.all_inputs)
         idxs = range(n_idxs)
+        if rnd_seed:
+            np.random.seed(rnd_seed)
         rand_idxs = np.random.permutation(idxs)
         self.all_inputs = self.all_inputs[rand_idxs, ...]
         if ys is not None:
@@ -90,8 +93,6 @@ class Dataset(object):
             (len(self.valid_idxs) + len(self.train_idxs)):
             (len(self.valid_idxs) + len(self.train_idxs)) +
             round(split[2] * n_idxs)]
-
-        #print("self.all_labels",self.all_labels)
               
     @property
     def X(self):
@@ -129,7 +130,7 @@ class Dataset(object):
                 labels = None
         else:
             inputs, labels = [], []
-        return DatasetSplit(inputs, labels)
+        return DatasetSplit(inputs, labels, self.rnd_seed)
 
     @property
     def valid(self):
@@ -147,7 +148,7 @@ class Dataset(object):
                 labels = None
         else:
             inputs, labels = [], []
-        return DatasetSplit(inputs, labels)
+        return DatasetSplit(inputs, labels, self.rnd_seed)
 
     @property
     def test(self):
@@ -165,7 +166,7 @@ class Dataset(object):
                 labels = None
         else:
             inputs, labels = [], []
-        return DatasetSplit(inputs, labels)
+        return DatasetSplit(inputs, labels, self.rnd_seed)
 
     def mean(self):
         """Mean of the inputs/Xs.
@@ -188,7 +189,7 @@ class Dataset(object):
 
 class DatasetSplit(object):
 
-    def __init__(self, images, labels):
+    def __init__(self, images, labels, rnd_seed=1):
         self.images = np.array(images).astype(np.float32)
         if labels is not None:
             self.labels = np.array(labels).astype(np.int32)
@@ -196,9 +197,12 @@ class DatasetSplit(object):
         else:
             self.labels = None
         self.num_examples = len(self.images)
+        self.rnd_seed = rnd_seed
 
     def next_batch(self, batch_size=100):
         # Shuffle each epoch
+        if self.rnd_seed:
+            np.random.seed(self.rnd_seed)
         current_permutation = np.random.permutation(range(len(self.images)))
         epoch_images = self.images[current_permutation, ...]
         if self.labels is not None:
@@ -215,8 +219,4 @@ class DatasetSplit(object):
                 if self.labels is not None else None
             }
             self.current_batch_idx += batch_size
-            #print("next_batch:", type(this_batch))
-            #print("next_batch[images]:", this_batch['images'])
-            #print("next_batch[labels]:", this_batch['labels'])
-            #print("--")
             yield this_batch['images'], this_batch['labels']
