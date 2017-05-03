@@ -1,4 +1,5 @@
 import os
+import re
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -8,8 +9,12 @@ from utils.imgs import *
 
 def get_dataframe(path, num_entities=4, num_samples=25):
 
-    entities = os.listdir(path)
+    #Search for directories that start with 'm.'
+    entities = [f for f in os.listdir(path) if re.match(r'm\.*', f)]
     assert(num_entities <= len(entities))
+    
+    #entities = os.listdir(path)
+    #assert(num_entities <= len(entities))
 
     celebs = np.random.choice(entities, num_entities, replace=False)
 
