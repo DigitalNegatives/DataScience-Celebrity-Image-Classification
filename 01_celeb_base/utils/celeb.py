@@ -7,15 +7,15 @@ from scipy.misc import imread
 from skimage.transform import resize
 from utils.imgs import *
 
-def get_dataframe(path, num_entities=4, num_samples=25):
+#def get_dataframe(path, num_entities=4, num_samples=25):
+def get_dataframe(path, num_entities=4, num_samples=25, rnd_seed=0):
 
     #Search for directories that start with 'm.'
     entities = [f for f in os.listdir(path) if re.match(r'm\.*', f)]
     assert(num_entities <= len(entities))
     
-    #entities = os.listdir(path)
-    #assert(num_entities <= len(entities))
-
+    if rnd_seed:
+        np.random.seed(rnd_seed)
     celebs = np.random.choice(entities, num_entities, replace=False)
 
     imgs = []
