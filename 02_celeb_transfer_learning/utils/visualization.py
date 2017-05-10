@@ -3,9 +3,6 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 import matplotlib.animation as animation
 
-# Taken from lab3
-
-
 def montage(images, saveto='montage.png'):
     """Draw all images as a montage separated by 1 pixel borders.
     Also saves the file to the destination specified by `saveto`.
@@ -136,86 +133,3 @@ def montage_filters(W):
                   1 + j + j * W.shape[1]:1 + j + (j + 1) * W.shape[1]] = (
                     np.squeeze(W[:, :, :, this_filter]))
     return m
-
-    
-####
-# Functions to normalise and denormalise images from Dataset:
-####
-
-
-def normalization(img, ds):
-    norm_img = (img - ds.mean()) / ds.std()
-    return norm_img
-
-
-def denormalization(norm_img, ds):
-    img = norm_img * ds.std() + ds.mean()
-    return img
-
-
-import cv2
-import os
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.misc import imread
-from skimage.transform import resize
-from utils.imgs import *
-from utils.celeb import *
-
-
-def qualify_crop(entity, images_list, data_dir, img_dims):
-    
-    face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-    eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
-
-    face_images = []
-    entity_list = []
-    num_face = 0
-    num_eyes = 0
-    num_qual = 0
-
-    #entity = df.entities[0]
-    # images_list = os.listdir(data_dir + '/' + entity)
-    #print(entity)
-        
-    for image in images_list:
-        #print(image)
-        image_name = data_dir + '/' + entity + '/' + image
-        #print(image_name)
-        img = cv2.imread(image_name)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        img_c = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-
-        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-        if len(faces) <= 1:
-            for (x,y,w,h) in faces:
-                    
-                roi_gray = gray[y:y+h, x:x+w]
-                #roi_color = img_c[y:y+h, x:x+w]
-                    
-                num_face = num_face + 1
-
-                eyes = eye_cascade.detectMultiScale(roi_gray)
-                if (len(eyes) != 2): 
-                    continue
-                        
-                ex1,ey1,ew1,eh1 = eyes[0]
-                ex2,ey2,ew2,eh2 = eyes[1]
-                if np.abs( ey1 - ey2 ) > eh1 or np.abs( ex1 - ex2 ) < (ew1/2):
-                    continue
-                num_eyes+=1
-                new_img = img_c.copy()
-
-                x,y,w,h = faces[0] 
-                border = 0
-                    
-                new_img = cv2.resize(new_img[y-border:y+h-1+border, x-border:x+w-1+border],
-                                         (img_dims, img_dims), interpolation = cv2.INTER_CUBIC)
-
-                #crop_converted = crop_img
-                face_images.append( new_img )
-                entity_list.append( image )
-    print("face", num_face)
-    print("eyes", num_eyes)
-    return face_images, entity_list
