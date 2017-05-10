@@ -1,11 +1,5 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-#import tensorflow.examples.tutorials.mnist.input_data as input_data
-
-
-# Taken from lab3
-
 
 def dense_to_one_hot(labels):
     """Convert class labels from scalars to one-hot vectors.
@@ -47,7 +41,7 @@ class Dataset(object):
         Indexes of the valid split.
     """
 
-    def __init__(self, Xs, ys=None, split=[1.0, 0.0, 0.0], one_hot=False, rnd_seed=0):
+    def __init__(self, Xs, ys=None, zs=None, split=[1.0, 0.0, 0.0], one_hot=False, rnd_seed=1):
         """Initialize a Dataset object.
         Parameters
         ----------
@@ -60,7 +54,6 @@ class Dataset(object):
         one_hot : bool, optional
             Whether or not to use one-hot encoding of labels (ys).
         """
-        print("Dataset init")
         self.all_idxs = []
         self.all_labels = []
         self.all_inputs = []
@@ -69,8 +62,7 @@ class Dataset(object):
         self.test_idxs = []
         self.n_labels = 0
         self.split = split
-        self.rnd_seed = rnd_seed
-        self.rand_idxs = []
+        self.rand_idxs_peek = []
 
         # Now mix all the labels that are currently stored as blocks
         self.all_inputs = Xs
@@ -79,13 +71,18 @@ class Dataset(object):
         if rnd_seed:
             np.random.seed(rnd_seed)
         rand_idxs = np.random.permutation(idxs)
-        self.rand_idxs = rand_idxs
+        self.rand_idxs_peek = rand_idxs
         self.all_inputs = self.all_inputs[rand_idxs, ...]
         if ys is not None:
             self.all_labels = ys if not one_hot else dense_to_one_hot(ys)
             self.all_labels = self.all_labels[rand_idxs, ...]
         else:
             self.all_labels = None
+        if zs is not None:
+            self.all_bottles = zs
+            self.all_bottles = self.all_bottles[rand_idxs, ...]
+        else:
+            self.all_bottles = None
 
         # Get splits
         self.train_idxs = idxs[:round(split[0] * n_idxs)]
@@ -95,7 +92,10 @@ class Dataset(object):
             (len(self.valid_idxs) + len(self.train_idxs)):
             (len(self.valid_idxs) + len(self.train_idxs)) +
             round(split[2] * n_idxs)]
-              
+        #if normalized == True:
+        #        self.all_inputs = normalize(self.all_inputs, np.mean(self.all_inputs[self.train_idxs]), img_dims)
+
+
     @property
     def X(self):
         """Inputs/Xs/Images.
@@ -117,6 +117,16 @@ class Dataset(object):
         return self.all_labels
 
     @property
+    def Z(self):
+        """Outputs/ys/Labels.
+        Returns
+        -------
+        all_labels : np.ndarray
+            Original Outputs/ys.
+        """
+        return self.all_bottles
+
+    @property
     def train(self):
         """Train split.
         Returns
@@ -130,9 +140,13 @@ class Dataset(object):
                 labels = self.all_labels[self.train_idxs, ...]
             else:
                 labels = None
+            if self.all_bottles is not None:
+                bottles = self.all_bottles[self.train_idxs, ...]
+            else:
+                bottles = None
         else:
-            inputs, labels = [], []
-        return DatasetSplit(inputs, labels, self.rnd_seed)
+            inputs, labels, bottles = [], [], []
+        return DatasetSplit(inputs, labels, bottles)
 
     @property
     def valid(self):
@@ -148,9 +162,13 @@ class Dataset(object):
                 labels = self.all_labels[self.valid_idxs, ...]
             else:
                 labels = None
+            if self.all_bottles is not None:
+                bottles = self.all_bottles[self.valid_idxs, ...]
+            else:
+                bottles = None
         else:
-            inputs, labels = [], []
-        return DatasetSplit(inputs, labels, self.rnd_seed)
+            inputs, labels, bottles = [], [], []
+        return DatasetSplit(inputs, labels, bottles)
 
     @property
     def test(self):
@@ -166,9 +184,13 @@ class Dataset(object):
                 labels = self.all_labels[self.test_idxs, ...]
             else:
                 labels = None
+            if self.all_bottles is not None:
+                bottles = self.all_bottles[self.test_idxs, ...]
+            else:
+                bottles = None
         else:
-            inputs, labels = [], []
-        return DatasetSplit(inputs, labels, self.rnd_seed)
+            inputs, labels, bottles = [], [], []
+        return DatasetSplit(inputs, labels, bottles)
 
     def mean(self):
         """Mean of the inputs/Xs.
@@ -191,13 +213,20 @@ class Dataset(object):
 
 class DatasetSplit(object):
 
-    def __init__(self, images, labels, rnd_seed=1):
+    #def __init__(self, images, labels):
+    def __init__(self, images, labels, bottles, rnd_seed=1):
         self.images = np.array(images).astype(np.float32)
         if labels is not None:
             self.labels = np.array(labels).astype(np.int32)
             self.n_labels = len(np.unique(labels))
         else:
             self.labels = None
+
+        if bottles is not None:
+            self.bottles = np.array(bottles).astype(np.float64)
+        else:
+            self.bottles = None
+
         self.num_examples = len(self.images)
         self.rnd_seed = rnd_seed
 
@@ -209,6 +238,8 @@ class DatasetSplit(object):
         epoch_images = self.images[current_permutation, ...]
         if self.labels is not None:
             epoch_labels = self.labels[current_permutation, ...]
+        if self.bottles is not None:
+            epoch_bottles = self.bottles[current_permutation, ...]
 
         # Then iterate over the epoch
         self.current_batch_idx = 0
@@ -217,8 +248,8 @@ class DatasetSplit(object):
                 self.current_batch_idx + batch_size, len(self.images))
             this_batch = {
                 'images': epoch_images[self.current_batch_idx:end_idx],
-                'labels': epoch_labels[self.current_batch_idx:end_idx]
-                if self.labels is not None else None
+                'labels': epoch_labels[self.current_batch_idx:end_idx] if self.labels is not None else None,
+                'bottles': epoch_bottles[self.current_batch_idx:end_idx] if self.bottles is not None else None
             }
             self.current_batch_idx += batch_size
-            yield this_batch['images'], this_batch['labels']
+            yield this_batch['images'], this_batch['labels'], this_batch['bottles']
