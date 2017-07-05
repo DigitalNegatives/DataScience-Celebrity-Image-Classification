@@ -2,6 +2,7 @@ face_cascade_dir = './utils/haarcascade_frontalface_default.xml'
 eye_cascade_dir = './utils/haarcascade_eye.xml'
 
 data_base_dir = "../data/aligned_multi_gaus_mask_4_20"
+# data_base_dir = "../data/aligned_multi_conv_5_20_mask_4_20"
 corpus_dir = "{}/corpus".format(data_base_dir)
 bottleneck_dir = "{}/bottleneck".format(data_base_dir)
 log_dir = "./test/logs"
@@ -29,6 +30,7 @@ dropout_test = 1.0
 #
 # #Conv parameters
 # n_filters = [32, 32, 8]  #filter output sizes
+n_filters = [[32,32,16],[64,64,32]]
 # filter_sizes = [4, 4, 2]  #
 filter_strides = [1, 2, 2, 1]
 # #maxpool parameters

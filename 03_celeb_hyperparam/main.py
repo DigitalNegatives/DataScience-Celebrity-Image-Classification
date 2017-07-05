@@ -13,11 +13,17 @@ def start(params):
     tf.reset_default_graph()
 
     ### Get input parameters
+    # tid = params['tid']
+    xtrial = params['trial']
+    print("len(xtrial):", len(xtrial))
+    # print("xtrial[-1]:", xtrial[-1])
+    # print("*** TID:", tid)
     activation_conv  = params['activation_conv']
     activation_fc = params['activation_fc']
     # orig_input_shape = params['orig_input_shape']
     # keep_prob = params['keep_prob']
     dropout_train = params['dropout_train']
+    # learning_rate_bottleneck = params['learning_rate_bottleneck']
     learning_rate_bottleneck = params['learning_rate_bottleneck']
     learning_rate_label = params['learning_rate_label']
     n_filters = list(params['n_filters'])  #filter output sizes
@@ -152,15 +158,23 @@ def start(params):
     acc_df = pd.DataFrame([{'acc_test':acc_test, 'acc_train':acc_train_list, 'avg_cost_bottle':avg_cost,'epochs_clsf':epochs_labels, 'epochs_bottles':epochs_bottles}])
     report_df = report(y, ds, n_classes)
     report_df = report_df.transpose()
-    report_df = report_df.append(params_df)
-    report_df = report_df.append(acc_df)
+    # report_df = report_df.append(params_df)
+    # report_df = report_df.append(acc_df)
+
 
     print("\n+++++acc_df+++++: \n", acc_df)
     # print("report_df.type:", report_df.type)
     # print("report_df.to_html:", report_df.to_html(float_format='%.4f'))
     # with open(log_name, 'a') as f:
+    # with open(report_name, 'a') as f:
+        # f.write(report_df.to_html(float_format='%.4f'))
+
     with open(report_name, 'a') as f:
+        f.write("<br>test:{}".format(xtrial.trials[-1]['tid']+1))
+        f.write(params_df.to_html())
         f.write(report_df.to_html(float_format='%.4f'))
+        f.write(acc_df.to_html())
+        f.write("-------")
 
 
     train_writer.close()
@@ -185,7 +199,10 @@ if __name__ == "__main__":
     print("report_name:", report_name)
 
     with open(report_name, 'a') as f:
-        f.write("start time:" + str(start_utc_time))
+        f.write("start time:{} <br>dataset:{}".format(str(start_utc_time), data_base_dir))
+        # f.write("start time:" + str(start_utc_time))
+        # f.write("<br>dataset:", data_base_dir)
+        # f.write("<br>dataset:", data_base_dir)
 
 
     all_images_4d, all_labels, all_bottles = load_preprocessed_data(corpus_dir,
@@ -210,17 +227,20 @@ if __name__ == "__main__":
     best = fmin(start,
         algo=tpe.suggest,
         space={
+            'trial':hp.choice('trial', [trials]),
             'report_name':hp.choice('report_name', [report_name]),
             # 'orig_input_shape':hp.choice('orig_input_shape', [x_4d_shape]),
             # 'train_mean':hp.choice('train_mean', [train_mean]),
             'ds':hp.choice('ds', [ds]),
-            'n_filters':hp.choice('n_filters', [[32,32,16],[64,64,32]]),
+            # 'n_filters':hp.choice('n_filters', [[32,32,16],[64,64,32]]),
+            'n_filters':hp.choice('n_filters', n_filters),
             'filter_sizes':hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]]),
             # 'keep_prob':hp.choice('keep_prob', [0.5, 0.6, 0.7]),
             'dropout_train':hp.choice('dropout_train', [0.5, 0.6, 0.7]),
-            'activation_conv':hp.choice('activation_conv', [tf.nn.tanh, tf.nn.relu]),
-            # #'activation_fc':hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu, tf.nn.sigmoid]),
-            'activation_fc':hp.choice('activation_fc', [tf.nn.sigmoid]),
+            # 'activation_conv':hp.choice('activation_conv', [tf.nn.tanh, tf.nn.relu]),
+            'activation_conv':hp.choice('activation_conv', [tf.nn.tanh]),
+            'activation_fc':hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu]),
+            # 'activation_fc':hp.choice('activation_fc', [tf.nn.sigmoid]),
             'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', 0.0001, 0.0007),
             'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
             # # 'learning_rate_MSE':hp.normal('learning_rate_MSE', 0.00005, 2),
@@ -228,12 +248,16 @@ if __name__ == "__main__":
             },
         max_evals=1,
         trials=trials)
-    print(best)
+    print("Best:",best)
     stop_utc_time = datetime.now()
     with open(report_name, 'a') as f:
-        f.write("stop time:" + str(stop_utc_time))
+        f.write("<br>stop time:" + str(stop_utc_time))
 
-    df = pd.DataFrame(trials.trials)
-    df.to_csv(log_csv_name)
+    df_trials = pd.DataFrame(trials.trials)
+    df_trials.to_csv(log_csv_name)
+    with open('myTrial.html', 'a') as f:
+        f.write(df_trials.to_html())
 
+    print ("\n++++trails.trials+++++:", trials.trials)
+    print ("\n++++trail.results+++++:", trials.results)
     print("Done")
