@@ -233,18 +233,30 @@ if __name__ == "__main__":
             # 'train_mean':hp.choice('train_mean', [train_mean]),
             'ds':hp.choice('ds', [ds]),
             # 'n_filters':hp.choice('n_filters', [[32,32,16],[64,64,32]]),
-            'n_filters':hp.choice('n_filters', n_filters),
-            'filter_sizes':hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]]),
+            # 'n_filters':hp.choice('n_filters', n_filters),
+            # 'filter_sizes':hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]]),
+            # 'filter_sizes':hp.choice('filter_sizes', filter_sizes),
             # 'keep_prob':hp.choice('keep_prob', [0.5, 0.6, 0.7]),
-            'dropout_train':hp.choice('dropout_train', [0.5, 0.6, 0.7]),
+            # 'dropout_train':hp.choice('dropout_train', [0.5, 0.6, 0.7]),
+            # 'dropout_train':hp.choice('dropout_train', dropout_train),
             # 'activation_conv':hp.choice('activation_conv', [tf.nn.tanh, tf.nn.relu]),
-            'activation_conv':hp.choice('activation_conv', [tf.nn.tanh]),
-            'activation_fc':hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu]),
+            # 'activation_conv':hp.choice('activation_conv', [tf.nn.tanh]),
+            # 'activation_fc':hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu]),
             # 'activation_fc':hp.choice('activation_fc', [tf.nn.sigmoid]),
-            'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', 0.0001, 0.0007),
-            'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
+            # 'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', 0.0001, 0.0007),
+            # 'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', learning_rate_bottleneck),
+            # 'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
+            # 'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
+            # 'learning_rate_label':hp.uniform('learning_rate_label', learning_rate_label)
             # # 'learning_rate_MSE':hp.normal('learning_rate_MSE', 0.00005, 2),
             # 'learning_rate':hp.normal('learning_rate', 0.00005, 2)
+            'n_filters':config_n_filters,
+            'filter_sizes':config_filter_sizes,
+            'dropout_train':config_dropout_train,
+            'activation_conv':config_activation_conv,
+            'activation_fc':config_activation_fc,
+            'learning_rate_bottleneck':config_learning_rate_bottleneck,
+            'learning_rate_label':config_learning_rate_label
             },
         max_evals=1,
         trials=trials)
