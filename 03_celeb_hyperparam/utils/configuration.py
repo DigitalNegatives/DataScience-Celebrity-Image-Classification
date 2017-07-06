@@ -1,8 +1,8 @@
 from hyperopt import hp
 import tensorflow as tf
 
-face_cascade_dir = './utils/haarcascade_frontalface_default.xml'
-eye_cascade_dir = './utils/haarcascade_eye.xml'
+# face_cascade_dir = './utils/haarcascade_frontalface_default.xml'
+# eye_cascade_dir = './utils/haarcascade_eye.xml'
 
 data_base_dir = "../data/aligned_multi_gaus_mask_4_20"
 # data_base_dir = "../data/aligned_multi_conv_5_20_mask_4_20"
@@ -46,10 +46,11 @@ n_bottles = 2048
 
 
 ### Hyperparameter Parameters ###
+config_max_evals = 160
 config_n_filters = hp.choice('n_filters', [[32,32,16],[64,64,32]])
 config_filter_sizes = hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]])
 config_dropout_train = hp.choice('dropout_train', [0.5, 0.6, 0.7])
-config_activation_conv = hp.choice('activation_conv', [tf.nn.tanh])
-config_activation_fc = hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu])
+config_activation_conv = hp.choice('activation_conv', [tf.nn.tanh, tf.nn.relu])
+config_activation_fc = hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu, tf.sigmoid])
 config_learning_rate_bottleneck = hp.uniform('learning_rate_bottleneck', 0.0001, 0.0007)
 config_learning_rate_label = hp.uniform('learning_rate_label', 0.0001, 0.0007)
