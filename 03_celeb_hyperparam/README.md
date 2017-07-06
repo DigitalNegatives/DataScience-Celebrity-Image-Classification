@@ -60,4 +60,5 @@ A 160 different configurations were tested. Of the 160, 16 resulted in an accura
 
 &nbsp;
 #### Report
-An html file that contains all the parameters for each of the test was generated and placed in the results directory.
+An html file that contains all the parameters for each of the test was generated and placed in the results directory. acc_test is the test result. acc_train contains the last four train values. The last four is recorded to check if any improvements occurred. If the values are the same then the training has saturated.
+
