@@ -13,28 +13,18 @@ def start(params):
     tf.reset_default_graph()
 
     ### Get input parameters
-    # tid = params['tid']
-    xtrial = params['trial']
-    print("len(xtrial):", len(xtrial))
-    # print("xtrial[-1]:", xtrial[-1])
-    # print("*** TID:", tid)
     activation_conv  = params['activation_conv']
     activation_fc = params['activation_fc']
-    # orig_input_shape = params['orig_input_shape']
-    # keep_prob = params['keep_prob']
     dropout_train = params['dropout_train']
-    # learning_rate_bottleneck = params['learning_rate_bottleneck']
     learning_rate_bottleneck = params['learning_rate_bottleneck']
     learning_rate_label = params['learning_rate_label']
     n_filters = list(params['n_filters'])  #filter output sizes
     filter_sizes = list(params['filter_sizes'])
-    #
-    ds = params['ds']
-    report_name = params['report_name']
 
     n_features = ds.X.shape[1]
     n_classes = ds.Y.shape[1]
 
+    print("train_mean:", train_mean)
 
     # Input placeholders
     with tf.name_scope('input'):
@@ -50,12 +40,8 @@ def start(params):
     # Create conlution layers
     h, Ws = convolutions(x_4d, n_filters, filter_sizes, filter_strides, act=activation_conv)
     h_shape = h.get_shape().as_list()
-    # print("h.shape:", h.get_shape().as_list())
-    # print("h[3]:", h.get_shape().as_list()[3])
-    # print("Ws:", Ws)
 
     hidden1, pre_act_1 = nn_layer(h, h_shape[1]*h_shape[2]*h_shape[3], n_nodes, 'layer1', act=activation_fc)
-    # print(hidden1)
 
     dropped = drop_layer(hidden1, keep_prob)
     hidden2, pre_act_2 = nn_layer(dropped, n_nodes, n_nodes, 'layer2')
@@ -111,7 +97,9 @@ def start(params):
             total_cost = []
 
             for batch_X, _, batch_Z in ds.train.next_batch(batch_size=batch_size):
-                this_cost, _ = sess.run([loss_bottleneck, optimizer_bottleneck], feed_dict={x: batch_X - train_mean, z: batch_Z, keep_prob: dropout_train})
+                this_cost, _ = sess.run([loss_bottleneck, optimizer_bottleneck], feed_dict={x: batch_X - train_mean,
+                                                                                            z: batch_Z,
+                                                                                            keep_prob: dropout_train})
                 total_cost = total_cost + this_cost
 
             if epoch_i%10 == 0:
@@ -140,7 +128,7 @@ def start(params):
         else:
             # Train network
             for batch_X, batch_Y, batch_Z in ds.train.next_batch(batch_size=batch_size):
-                summary, _ = sess.run([merged, train_step], feed_dict={x: batch_X,
+                summary, _ = sess.run([merged, train_step], feed_dict={x: batch_X - train_mean,
                                                                        y_: batch_Y,
                                                                        z: batch_Z,
                                                                        keep_prob: dropout_train})
@@ -158,19 +146,10 @@ def start(params):
     acc_df = pd.DataFrame([{'acc_test':acc_test, 'acc_train':acc_train_list, 'avg_cost_bottle':avg_cost,'epochs_clsf':epochs_labels, 'epochs_bottles':epochs_bottles}])
     report_df = report(y, ds, n_classes)
     report_df = report_df.transpose()
-    # report_df = report_df.append(params_df)
-    # report_df = report_df.append(acc_df)
 
-
-    print("\n+++++acc_df+++++: \n", acc_df)
-    # print("report_df.type:", report_df.type)
-    # print("report_df.to_html:", report_df.to_html(float_format='%.4f'))
-    # with open(log_name, 'a') as f:
-    # with open(report_name, 'a') as f:
-        # f.write(report_df.to_html(float_format='%.4f'))
 
     with open(report_name, 'a') as f:
-        f.write("<br>test:{}".format(xtrial.trials[-1]['tid']+1))
+        f.write("<br>test:{}".format(trials.trials[-1]['tid']+1))
         f.write(params_df.to_html())
         f.write(report_df.to_html(float_format='%.4f'))
         f.write(acc_df.to_html())
@@ -188,22 +167,15 @@ def start(params):
 if __name__ == "__main__":
 
     start_utc_time = datetime.now()
-    # log_name = "results/results_{}.html".format(start_utc_time.strftime('%Y-%m-%d_%H%M'))
-    log_csv_name = "results/results_{}.csv".format(start_utc_time.strftime('%Y-%m-%d_%H%M'))
-    # print("log_name:", log_name)
 
     if not os.path.isdir(report_dir):
         os.mkdir(report_dir)
     report_name = "{}/results_{}.html".format(report_dir, start_utc_time.strftime('%Y-%m-%d_%H%M'))
-    report_csv_name = "{}/results_{}.csv".format(report_dir , start_utc_time.strftime('%Y-%m-%d_%H%M'))
+    log_csv_name = "results/results_{}.csv".format(start_utc_time.strftime('%Y-%m-%d_%H%M'))
     print("report_name:", report_name)
 
     with open(report_name, 'a') as f:
         f.write("start time:{} <br>dataset:{}".format(str(start_utc_time), data_base_dir))
-        # f.write("start time:" + str(start_utc_time))
-        # f.write("<br>dataset:", data_base_dir)
-        # f.write("<br>dataset:", data_base_dir)
-
 
     all_images_4d, all_labels, all_bottles = load_preprocessed_data(corpus_dir,
                                                 bottleneck_dir)
@@ -212,9 +184,6 @@ if __name__ == "__main__":
             all_images_4d.shape[1] * all_images_4d.shape[2] * all_images_4d.shape[3])
 
     ds = Dataset(all_images, all_labels, all_bottles, split=split, one_hot=True, rnd_seed=seed)
-    # n_samples = ds.X.shape[0]
-    # n_features = ds.X.shape[1]
-    # n_classes = ds.Y.shape[1]
     train_mean = np.mean(ds.train.images,0)
 
     df_train_class_sum, df_test_class_sum = get_class_distrutoins(ds)
@@ -227,29 +196,6 @@ if __name__ == "__main__":
     best = fmin(start,
         algo=tpe.suggest,
         space={
-            'trial':hp.choice('trial', [trials]),
-            'report_name':hp.choice('report_name', [report_name]),
-            # 'orig_input_shape':hp.choice('orig_input_shape', [x_4d_shape]),
-            # 'train_mean':hp.choice('train_mean', [train_mean]),
-            'ds':hp.choice('ds', [ds]),
-            # 'n_filters':hp.choice('n_filters', [[32,32,16],[64,64,32]]),
-            # 'n_filters':hp.choice('n_filters', n_filters),
-            # 'filter_sizes':hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]]),
-            # 'filter_sizes':hp.choice('filter_sizes', filter_sizes),
-            # 'keep_prob':hp.choice('keep_prob', [0.5, 0.6, 0.7]),
-            # 'dropout_train':hp.choice('dropout_train', [0.5, 0.6, 0.7]),
-            # 'dropout_train':hp.choice('dropout_train', dropout_train),
-            # 'activation_conv':hp.choice('activation_conv', [tf.nn.tanh, tf.nn.relu]),
-            # 'activation_conv':hp.choice('activation_conv', [tf.nn.tanh]),
-            # 'activation_fc':hp.choice('activation_fc', [tf.nn.tanh, tf.nn.relu]),
-            # 'activation_fc':hp.choice('activation_fc', [tf.nn.sigmoid]),
-            # 'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', 0.0001, 0.0007),
-            # 'learning_rate_bottleneck':hp.uniform('learning_rate_bottleneck', learning_rate_bottleneck),
-            # 'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
-            # 'learning_rate_label':hp.uniform('learning_rate_label', 0.0001, 0.0007)
-            # 'learning_rate_label':hp.uniform('learning_rate_label', learning_rate_label)
-            # # 'learning_rate_MSE':hp.normal('learning_rate_MSE', 0.00005, 2),
-            # 'learning_rate':hp.normal('learning_rate', 0.00005, 2)
             'n_filters':config_n_filters,
             'filter_sizes':config_filter_sizes,
             'dropout_train':config_dropout_train,
@@ -258,7 +204,7 @@ if __name__ == "__main__":
             'learning_rate_bottleneck':config_learning_rate_bottleneck,
             'learning_rate_label':config_learning_rate_label
             },
-        max_evals=1,
+        max_evals=config_max_evals,
         trials=trials)
     print("Best:",best)
     stop_utc_time = datetime.now()
@@ -269,7 +215,4 @@ if __name__ == "__main__":
     df_trials.to_csv(log_csv_name)
     with open('myTrial.html', 'a') as f:
         f.write(df_trials.to_html())
-
-    print ("\n++++trails.trials+++++:", trials.trials)
-    print ("\n++++trail.results+++++:", trials.results)
     print("Done")

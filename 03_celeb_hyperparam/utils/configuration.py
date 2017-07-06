@@ -22,10 +22,7 @@ epochs_bottles = 200
 # # Cosine Regularizer
 beta = 0.1
 
-# # Label training
-# learning_rate = 0.003
-# # learning_rate = 0.01
-# # learning_rate = 0.001
+# Label training
 epochs_labels = 100
 # dropout_train = 0.75
 dropout_test = 1.0
@@ -38,7 +35,7 @@ filter_strides = [1, 2, 2, 1]
 # #maxpool parameters
 # ksize = [1,2,2,1]
 # k_strides = [1,2,2,1]
-# #FC parameter
+# FC parameter
 n_nodes = 100
 #
 # #bottleneck layer
@@ -46,7 +43,7 @@ n_bottles = 2048
 
 
 ### Hyperparameter Parameters ###
-config_max_evals = 160
+config_max_evals = 2
 config_n_filters = hp.choice('n_filters', [[32,32,16],[64,64,32]])
 config_filter_sizes = hp.choice('filter_sizes', [[5,5,3],[4,4,2],[3,3,2]])
 config_dropout_train = hp.choice('dropout_train', [0.5, 0.6, 0.7])
