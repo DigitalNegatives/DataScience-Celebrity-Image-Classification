@@ -38,7 +38,7 @@ To help automate the parameter search process the code is no longer in a Jupiter
 
 &nbsp;
 #### Hyperparameter
-The library used to conduct the hyperparameter search is hpyeropt. This library provides an easy way to provide a range or a choice of parameters. 
+The library used to conduct the hyperparameter search is hpyeropt. This library provides an easy way to provide a range or a choice of parameters.
 
 hp.choice allows for one value to be picked from an array of values. This is used in dropout_train. hp.uniform allows for a uniform distribution of value to be picked between a minimum and maximum value. Below shows an example of both types.
 
@@ -54,11 +54,10 @@ The configuration for the complete network including the hyperparameter configur
 A 160 different configurations were tested. Of the 160, 16 resulted in an accuracy of 87.50%, which is a great improvement from before. There were 5 that provided the best result of 93.75%. The 5 that provided the best results are very consistent. The only difference among the five is the learning rate. The setting for all the parameters are shown below. The activation methods are the major reasons for the great improvement. The activations for the previous section were both relu.
 
 
-| filter 	| filter_sizes 	| activation_conv 	| activation_fc 	| dropout_train 	| learning_rate_label 	|
-|----------	|--------------	|-----------------	|---------------	|---------------	|---------------------	|
-| 64,64,32 	| 5,5,3 		| tanh 				| sigmoid			| 0.6 				| 0.000180 - 0.000203 	|
+| test result | filter 	  | filter_sizes 	| activation_conv 	| activation_fc 	| dropout_train 	| learning_rate_label 	|
+|------------ |----------	|--------------	|-----------------	|---------------	|---------------	|---------------------	|
+| 93.75% 			| 64,64,32 	| 5,5,3 				| tanh 							| sigmoid 				| 0.6 						| 0.000180 - 0.000203 	|
 
 &nbsp;
 #### Report
 An html file that contains all the parameters for each of the test was generated and placed in the results directory. acc_test is the test result. acc_train contains the last four train values. The last four is recorded to check if any improvements occurred. If the values are the same then the training has saturated.
-
